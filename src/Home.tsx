@@ -1,24 +1,72 @@
-import {useEffect,useState} from 'react';import {Link} from 'react-router-dom';import {sb,useApp,pub} from './lib';
+import {useEffect,useState} from 'react';
+import {Link} from 'react-router-dom';
+import {sb,useApp,pub} from './lib';
+
+const defaults:any={
+ org_name:'Savitribai Phule Mahila Mandal, Wardha', tagline:'महिला शिक्षित झाली तर समाज प्रगत होईल',
+ top_location:'Wardha, Maharashtra',top_email:'',top_phone:'',
+ hero_title:'Empowering Women, Building a Better Society',
+ hero_subtitle:'Together for Education, Health and Equality',
+ hero_quote:'Education is the key to women’s empowerment.',hero_quote_author:'Savitribai Phule',
+ hero_cta:'Empowering Women, Building a Better Society',
+ admin_title:'ADMIN LOGIN',admin_desc:'Super Admin and authorised administrators',
+ member_title:'MEMBER LOGIN',member_desc:'Approved NGO members',
+ register_title:'NEW MEMBER? REGISTER HERE',register_desc:'Registration requests require admin approval.',
+ leadership_title:'Our Leadership',about_title:'About Savitribai Phule Mahila Mandal',
+ about:'We are committed to the empowerment of women, education, and social development. Our mission is to build a progressive, equal and educated society where every woman can thrive.',
+ about_quote:'Together we can create a stronger, more informed and compassionate society.',
+ activities_title:'Our Activities',news_title:'Latest News',join_title:'Join Us in Our Mission',
+ join_text:'Be a part of our journey towards a more empowered and progressive society.',
+ footer_text:'© Savitribai Phule Mahila Mandal, Wardha. All Rights Reserved.',
+ logo_path:'',hero_image:'',about_image:''
+};
 export default function Home(){
- const {lang,setL,t,session}=useApp();const [c,setC]=useState<any>({}),[news,setNews]=useState<any[]>([]),[acts,setActs]=useState<any[]>([]),[sl,setSl]=useState<any[]>([]),[i,setI]=useState(0);
- useEffect(()=>{(async()=>{const h=await sb.from('homepage_content').select('*');setC(Object.fromEntries((h.data||[]).map((r:any)=>[r.key,r])));
-  setNews((await sb.from('news').select('*').eq('is_published',true).order('published_on',{ascending:false}).limit(6)).data||[]);
-  setActs((await sb.from('activities').select('*').eq('is_published',true).limit(6)).data||[]);
-  setSl((await sb.from('slider_images').select('*').eq('is_published',true).order('sort_order')).data||[])})()},[]);
- useEffect(()=>{if(sl.length<2)return;const x=setInterval(()=>setI(v=>(v+1)%sl.length),5000);return()=>clearInterval(x)},[sl]);
- const g=(k:string,d:string)=>c[k]?(lang==='mr'&&c[k].value_mr?c[k].value_mr:c[k].value_en):d;
- const L=(r:any,k:string)=>(lang==='mr'&&r[k+'_mr'])||r[k+'_en'];
- return <div>
- <header className="bg-white shadow sticky top-0 z-10"><div className="max-w-6xl mx-auto p-3 flex flex-wrap items-center gap-3">
-  <div className="flex-1 min-w-[200px]"><div className="font-bold text-forest">Savitribai Phule Mahila Mandal, Wardha</div><div className="text-forest">सावित्रीबाई फुले महिला मंडळ, वर्धा</div></div>
-  <button onClick={()=>setL('en')} className={lang==='en'?'font-bold':''}>EN</button>|<button onClick={()=>setL('mr')} className={lang==='mr'?'font-bold':''}>मराठी</button>
-  <Link className="btn" to="/auth">{session?'Dashboard':t('login')}</Link>{!session&&<Link className="btn2" to="/auth?mode=register">{t('register')}</Link>}</div></header>
- <section className="bg-forest text-white bg-cover bg-center" style={sl[i]?{backgroundImage:`linear-gradient(#14532dcc,#14532dcc),url(${pub(sl[i].image_path)})`}:{}}><div className="max-w-6xl mx-auto px-4 py-20">
-  <h1 className="text-3xl md:text-5xl font-serif">{g('hero_title','Empowering Women, Building a Better Society')}</h1>
-  <p className="mt-3 text-lg">{g('hero_subtitle','Together for Education, Health and Equality')}</p>{sl[i]&&<p className="mt-2 text-gold">{L(sl[i],'caption')}</p>}</div></section>
- <main className="max-w-6xl mx-auto p-4 space-y-10">
-  <section><h2 className="text-2xl font-bold text-forest mb-2">About Us</h2><p>{g('about','Edit this text from Admin > Homepage.')}</p></section>
-  <section><h2 className="text-2xl font-bold text-forest mb-2">{t('acts')}</h2><div className="grid sm:grid-cols-3 gap-4">{acts.map(a=><div key={a.id} className="bg-white rounded-xl shadow p-4"><b>{L(a,'title')}</b><p className="text-sm">{L(a,'description')}</p></div>)}</div></section>
-  <section><h2 className="text-2xl font-bold text-forest mb-2">{t('news')}</h2>{news.map(n=><div key={n.id} className="bg-white rounded-xl shadow p-4 mb-2"><b>{L(n,'title')}</b> <span className="text-xs text-gray-500">{n.published_on}</span><p className="text-sm">{L(n,'body')}</p></div>)}</section>
-  <section><h2 className="text-2xl font-bold text-forest mb-2">{t('contact')}</h2><p className="whitespace-pre-line">{g('contact','')}</p></section>
- </main><footer className="bg-forest text-white text-center p-4">© Savitribai Phule Mahila Mandal, Wardha</footer></div>}
+ const {lang,setL,t,session}=useApp();
+ const [c,setC]=useState<any>(defaults),[leaders,setLeaders]=useState<any[]>([]),[news,setNews]=useState<any[]>([]),[acts,setActs]=useState<any[]>([]),[slides,setSlides]=useState<any[]>([]),[idx,setIdx]=useState(0);
+ useEffect(()=>{(async()=>{
+  const [h,l,n,a,s]=await Promise.all([
+   sb.from('homepage_content').select('*'),
+   sb.from('leadership').select('*').eq('is_published',true).order('sort_order'),
+   sb.from('news').select('*').eq('is_published',true).order('published_on',{ascending:false}).limit(3),
+   sb.from('activities').select('*').eq('is_published',true).order('created_at',{ascending:false}).limit(5),
+   sb.from('slider_images').select('*').eq('is_published',true).order('sort_order')
+  ]);
+  const map:any={...defaults};(h.data||[]).forEach((r:any)=>{map[r.key]=lang==='mr'&&r.value_mr?r.value_mr:(r.value_en??'')});setC(map);
+  setLeaders(l.data||[]);setNews(n.data||[]);setActs(a.data||[]);setSlides(s.data||[]);
+ })()},[lang]);
+ useEffect(()=>{if(slides.length<2)return;const id=setInterval(()=>setIdx(x=>(x+1)%slides.length),5000);return()=>clearInterval(id)},[slides]);
+ const val=(key:string)=>c[key]||defaults[key]||'';
+ const text=(r:any,key:string)=>(lang==='mr'&&r[key+'_mr'])||r[key+'_en']||'';
+ const hero=slides.length?pub(slides[idx]?.image_path):pub(val('hero_image'));
+ const goAuth=(mode:string)=>`/auth?mode=${mode}`;
+ return <div className="spmm-home">
+  <div className="spmm-top"><span>⌖ {val('top_location')}</span><span>✉ {val('top_email')}</span><span>☎ {val('top_phone')}</span><div className="ml-auto flex gap-4"><Link to={goAuth('login')}>♙ Login</Link><Link to={goAuth('register')}>✎ Register</Link></div></div>
+  <header className="spmm-header">
+   <Link to="/" className="spmm-brand">{val('logo_path')?<img src={pub(val('logo_path'))}/>:<div className="spmm-logo-placeholder">SPMM</div>}<div><strong>{val('org_name')}</strong><small>{val('tagline')}</small></div></Link>
+   <nav><a href="#home">Home</a><a href="#about">About</a><a href="#leadership">{val('leadership_title')}</a><a href="#activities">Activities</a><a href="#news">News</a><a href="#contact">Contact</a></nav>
+   <div className="flex gap-2 text-sm"><button onClick={()=>setL('en')}>EN</button><button onClick={()=>setL('mr')}>मराठी</button></div>
+  </header>
+  <section id="home" className="spmm-hero" style={hero?{backgroundImage:`linear-gradient(90deg,rgba(255,255,255,.16),rgba(255,255,255,.25)),url("${hero}")`}:{} }>
+   <button className="spmm-slide-arrow left" onClick={()=>setIdx((idx-1+slides.length)%Math.max(1,slides.length))}>‹</button>
+   <div className="spmm-hero-copy"><h1>{val('hero_quote')}</h1><b>— {val('hero_quote_author')}</b><p>{val('hero_cta')}</p><h2>{val('hero_title')}</h2><span>{val('hero_subtitle')}</span></div>
+   <button className="spmm-slide-arrow right" onClick={()=>setIdx((idx+1)%Math.max(1,slides.length))}>›</button>
+   <div className="spmm-dots">{slides.map((s,i)=><button key={s.id} onClick={()=>setIdx(i)} className={idx===i?'active':''}/>)}</div>
+  </section>
+  <section className="spmm-access">
+   <Link to="/auth?mode=login&access=admin" className="spmm-access-card admin"><span>♙</span><h2>{val('admin_title')}</h2><p>{val('admin_desc')}</p><b>Login Here →</b></Link>
+   <Link to="/auth?mode=login&access=member" className="spmm-access-card member"><span>♟♟</span><h2>{val('member_title')}</h2><p>{val('member_desc')}</p><b>Login Here →</b></Link>
+   <Link to={goAuth('register')} className="spmm-access-card register"><span>▤</span><h2>{val('register_title')}</h2><p>{val('register_desc')}</p><b>Register Now →</b></Link>
+  </section>
+  <main className="spmm-main">
+   <section id="leadership" className="spmm-section"><h2 className="spmm-heading">{val('leadership_title')}</h2><div className="spmm-leaders">
+    {leaders.map((p,i)=><article className="spmm-leader" key={p.id}>{p.photo_path?<img src={pub(p.photo_path)}/>:<div className="spmm-no-photo">Photo</div>}<label>{p.title_en||'Leader'}</label><h3>{text(p,'name')}</h3><p>{text(p,'bio')}</p></article>)}
+    {!leaders.length&&<p className="spmm-empty">Leadership profiles will appear here.</p>}
+   </div></section>
+   <section id="about" className="spmm-about"><div className="spmm-about-image">{val('about_image')&&<img src={pub(val('about_image'))}/>}</div><div><h2>❧ {val('about_title')}</h2><p>{val('about')}</p><Link to="/auth?mode=register">Learn More →</Link></div><blockquote>“{val('about_quote')}”</blockquote></section>
+   <section id="activities" className="spmm-section"><h2 className="spmm-heading">{val('activities_title')}</h2><div className="spmm-activity-grid">{acts.map(a=><article className="spmm-activity" key={a.id}>{a.image_path&&<img src={pub(a.image_path)}/>}<b>{text(a,'title')}</b><p>{text(a,'description')}</p></article>)}{!acts.length&&<p className="spmm-empty">Activities will appear here.</p>}</div></section>
+   <section id="news" className="spmm-section"><h2 className="spmm-heading">{val('news_title')}</h2><div className="spmm-news-grid">{news.map(n=><article className="spmm-news" key={n.id}>{n.image_path&&<img src={pub(n.image_path)}/>}<div><h3>{text(n,'title')}</h3><small>{n.published_on}</small><p>{text(n,'body')}</p></div></article>)}{!news.length&&<p className="spmm-empty">Latest news will appear here.</p>}</div></section>
+   <section className="spmm-join"><div>🤝 <div><h2>{val('join_title')}</h2><p>{val('join_text')}</p></div></div><Link to={goAuth('register')}>Register Now →</Link></section>
+  </main>
+  <footer id="contact" className="spmm-footer"><div><strong>{val('org_name')}</strong><p>{val('top_location')}</p></div><div>✉ {val('top_email')}<p>☎ {val('top_phone')}</p></div><div>Follow Us: {val('footer_text')}</div></footer>
+ </div>
+}

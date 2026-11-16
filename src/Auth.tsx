@@ -1,11 +1,11 @@
 import {useState} from 'react';import {useNavigate,useLocation} from 'react-router-dom';import {sb,useApp} from './lib';
 export default function Auth(){
- const {profile,t}=useApp(),nav=useNavigate(),loc=useLocation();const [mode,setMode]=useState(new URLSearchParams(loc.search).get('mode')==='register'?'register':'login'),[f,setF]=useState<any>({}),[msg,setMsg]=useState('');
+ const {profile,t}=useApp(),nav=useNavigate(),loc=useLocation();const access=new URLSearchParams(loc.search).get('access');const [mode,setMode]=useState(new URLSearchParams(loc.search).get('mode')==='register'?'register':'login'),[f,setF]=useState<any>({}),[msg,setMsg]=useState('');
  const s=(k:string)=>(e:any)=>setF({...f,[k]:e.target.value});
  const go=async(e:any)=>{e.preventDefault();setMsg('');
   if(mode==='register'){const {error}=await sb.auth.signUp({email:f.email,password:f.password,options:{data:{full_name:f.full_name,mobile:f.mobile,designation:f.designation}}});setMsg(error?error.message:'Registered. Your application is Pending admin approval.');}
   else if(mode==='reset'){const {error}=await sb.auth.resetPasswordForEmail(f.email,{redirectTo:location.origin+'/auth'});setMsg(error?error.message:'Reset link sent to your email.')}
-  else{const {error}=await sb.auth.signInWithPassword({email:f.email,password:f.password});if(error)setMsg(error.message);else nav('/member')}};
+  else{const {data,error}=await sb.auth.signInWithPassword({email:f.email,password:f.password});if(error)setMsg(error.message);else{const {data:p,error:pe}=await sb.from('profiles').select('role,status').eq('id',data.user.id).single();if(pe)setMsg(pe.message);else if(p.status!=='approved')setMsg('Your account is awaiting admin approval.');else if(access==='admin'&&!['admin','super_admin'].includes(p.role))setMsg('This account does not have administrator access.');else if(access==='member'&&p.role!=='member')setMsg('Please use the Admin Login option for this account.');else nav(['admin','super_admin'].includes(p.role)?'/admin':'/member')}}};
  if(profile){const ok=profile.status==='approved';return <div className="max-w-md mx-auto p-6 space-y-3"><h2 className="text-xl font-bold">{profile.full_name}</h2>
   {ok?<><a className="btn block text-center" href="/member">Member Dashboard</a>{['admin','super_admin'].includes(profile.role)&&<a className="btn2 block text-center" href="/admin">Admin Dashboard</a>}</>:<p className="bg-yellow-100 p-3 rounded">Status: <b>{profile.status}</b>. Access is available after admin approval.</p>}
   <button className="btn" onClick={()=>sb.auth.signOut()}>{t('logout')}</button></div>}

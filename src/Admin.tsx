@@ -1,12 +1,13 @@
+import HomepageAdmin from './HomepageAdmin';
 import {useEffect,useState} from 'react';import {Link} from 'react-router-dom';import * as XLSX from 'xlsx';import {sb,useApp,ALLOWED,MAX} from './lib';import ExcelViewer from './ExcelViewer';
-const TABS=['Overview','Members','Content','News','Documents','Finance','Reports','Audit'];
+const TABS=['Overview','Homepage','Members','Content','News','Documents','Finance','Reports','Audit'];
 export default function Admin(){
  const {profile,t}=useApp();const [tab,setTab]=useState('Overview');
  return <div className="md:flex min-h-screen"><aside className="bg-forest text-white md:w-56 p-3 flex md:block gap-1 overflow-x-auto">
   <div className="font-bold mb-2 hidden md:block">SPMM Admin</div>{TABS.map(x=><button key={x} onClick={()=>setTab(x)} className={'block w-full text-left px-3 py-2 rounded whitespace-nowrap '+(tab===x?'bg-green-600':'')}>{x}</button>)}
   <Link to="/" className="block px-3 py-2">{t('home')}</Link><button className="block px-3 py-2" onClick={()=>sb.auth.signOut()}>{t('logout')}</button></aside>
   <main className="flex-1 p-4 overflow-x-auto"><p className="text-right text-sm">{profile.full_name} ({profile.role})</p>
-  {tab==='Overview'&&<Overview/>}{tab==='Members'&&<Members/>}{tab==='Content'&&<Content/>}{tab==='News'&&<News/>}{tab==='Documents'&&<Docs/>}{tab==='Finance'&&<Finance/>}{tab==='Reports'&&<Reports/>}{tab==='Audit'&&<Audit/>}</main></div>}
+  {tab==='Overview'&&<Overview/>}{tab==='Homepage'&&<HomepageAdmin/>}{tab==='Members'&&<Members/>}{tab==='Content'&&<Content/>}{tab==='News'&&<News/>}{tab==='Documents'&&<Docs/>}{tab==='Finance'&&<Finance/>}{tab==='Reports'&&<Reports/>}{tab==='Audit'&&<Audit/>}</main></div>}
 const cnt=async(t:string,f?:any)=>{let q=sb.from(t).select('*',{count:'exact',head:true});if(f)q=f(q);return (await q).count||0};
 function Overview(){const [s,setS]=useState<any>({});useEffect(()=>{(async()=>{const r=await sb.from('financial_records').select('txn_type,amount');const inc=(r.data||[]).filter((x:any)=>x.txn_type==='income').reduce((a:number,b:any)=>a+ +b.amount,0),exp=(r.data||[]).filter((x:any)=>x.txn_type==='expense').reduce((a:number,b:any)=>a+ +b.amount,0);
  setS({Members:await cnt('profiles'),Pending:await cnt('profiles',(q:any)=>q.eq('status','pending')),Approved:await cnt('profiles',(q:any)=>q.eq('status','approved')),Activities:await cnt('activities'),News:await cnt('news',(q:any)=>q.eq('is_published',true)),Documents:await cnt('documents'),'Income ₹':inc,'Expense ₹':exp})})()},[]);
