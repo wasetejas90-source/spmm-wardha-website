@@ -12,7 +12,7 @@ export default function Home(){
  <header className="bg-white shadow sticky top-0 z-10"><div className="max-w-6xl mx-auto p-3 flex flex-wrap items-center gap-3">
   <div className="flex-1 min-w-[200px]"><div className="font-bold text-forest">Savitribai Phule Mahila Mandal, Wardha</div><div className="text-forest">सावित्रीबाई फुले महिला मंडळ, वर्धा</div></div>
   <button onClick={()=>setL('en')} className={lang==='en'?'font-bold':''}>EN</button>|<button onClick={()=>setL('mr')} className={lang==='mr'?'font-bold':''}>मराठी</button>
-  <Link className="btn" to="/auth">{session?'Dashboard':t('login')}</Link>{!session&&<Link className="btn2" to="/auth">{t('register')}</Link>}</div></header>
+  <Link className="btn" to="/auth">{session?'Dashboard':t('login')}</Link>{!session&&<Link className="btn2" to="/auth?mode=register">{t('register')}</Link>}</div></header>
  <section className="bg-forest text-white bg-cover bg-center" style={sl[i]?{backgroundImage:`linear-gradient(#14532dcc,#14532dcc),url(${pub(sl[i].image_path)})`}:{}}><div className="max-w-6xl mx-auto px-4 py-20">
   <h1 className="text-3xl md:text-5xl font-serif">{g('hero_title','Empowering Women, Building a Better Society')}</h1>
   <p className="mt-3 text-lg">{g('hero_subtitle','Together for Education, Health and Equality')}</p>{sl[i]&&<p className="mt-2 text-gold">{L(sl[i],'caption')}</p>}</div></section>
