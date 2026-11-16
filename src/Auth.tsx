@@ -1,4 +1,4 @@
-import {useState} from 'react';import {useNavigate} from 'react-router-dom';import {sb,useApp} from './lib';
+import {useState} from 'react';import {useNavigate,useLocation} from 'react-router-dom';import {sb,useApp} from './lib';
 export default function Auth(){
  const {profile,t}=useApp(),nav=useNavigate();const [mode,setMode]=useState('login'),[f,setF]=useState<any>({}),[msg,setMsg]=useState('');
  const s=(k:string)=>(e:any)=>setF({...f,[k]:e.target.value});
