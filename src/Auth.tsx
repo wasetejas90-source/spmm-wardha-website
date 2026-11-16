@@ -1,6 +1,6 @@
 import {useState} from 'react';import {useNavigate,useLocation} from 'react-router-dom';import {sb,useApp} from './lib';
 export default function Auth(){
- const {profile,t}=useApp(),nav=useNavigate();const [mode,setMode]=useState('login'),[f,setF]=useState<any>({}),[msg,setMsg]=useState('');
+ const {profile,t}=useApp(),nav=useNavigate(),loc=useLocation();const [mode,setMode]=useState(new URLSearchParams(loc.search).get('mode')==='register'?'register':'login'),[f,setF]=useState<any>({}),[msg,setMsg]=useState('');
  const s=(k:string)=>(e:any)=>setF({...f,[k]:e.target.value});
  const go=async(e:any)=>{e.preventDefault();setMsg('');
   if(mode==='register'){const {error}=await sb.auth.signUp({email:f.email,password:f.password,options:{data:{full_name:f.full_name,mobile:f.mobile,designation:f.designation}}});setMsg(error?error.message:'Registered. Your application is Pending admin approval.');}
