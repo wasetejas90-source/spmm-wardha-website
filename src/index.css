@@ -108,3 +108,42 @@ img { max-width: 100%; }
   .spmm-footer { padding: 24px 18px; }
   .btn, .btn2 { padding: 11px 16px; }
 }
+
+/* Dashboard refresh: larger touch targets, clearer hierarchy, and mobile-first cards */
+.admin-overview { max-width: 1500px; margin: 0 auto; }
+.admin-stat-card { min-height: 150px; padding: 22px; border-radius: 20px; border: 1px solid transparent; box-shadow: 0 5px 18px rgba(24,49,32,.09); }
+.admin-stat-card.green { color:#145b35; background:#e7f5e9; border-color:#c6e7cc; }
+.admin-stat-card.amber { color:#815500; background:#fff4d9; border-color:#f0dfad; }
+.admin-stat-card.blue { color:#205b91; background:#e8f1fb; border-color:#cbdcf1; }
+.admin-stat-card.violet { color:#62458a; background:#f1ebfa; border-color:#ded1ef; }
+.admin-stat-icon { display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:15px; background:rgba(255,255,255,.72); font-size:25px; font-weight:800; }
+.admin-stat-card .text-3xl { overflow-wrap:anywhere; }
+.admin-overview .income { background:#16834a; }
+.admin-overview .expense { background:#d69a20; }
+.member-dashboard { padding-bottom:28px; }
+.member-category-card { min-height:190px; }
+.member-category-card:focus-visible { outline:3px solid #d3a72c; outline-offset:3px; }
+.member-dashboard table { min-width:620px; }
+.member-dashboard button, .member-dashboard a { touch-action:manipulation; }
+.admin-overview section, .admin-overview .admin-stat-card { transition: box-shadow .18s ease, transform .18s ease; }
+.admin-overview .admin-stat-card:hover { transform:translateY(-2px); box-shadow:0 9px 22px rgba(24,49,32,.12); }
+@media (max-width: 767px) {
+  .admin-stat-card { min-height:132px; padding:18px; }
+  .admin-stat-icon { width:42px; height:42px; }
+  .member-category-card { min-height:155px; }
+  .member-dashboard { padding-left:2px; padding-right:2px; }
+  .member-dashboard header h1 { font-size:clamp(1.55rem,6vw,2rem); }
+  .member-dashboard header > div:last-child { width:100%; }
+  .member-dashboard header > div:last-child > * { flex:1; text-align:center; }
+}
+
+.admin-main { background:#f7f8f2; min-height:100vh; }
+.admin-main > p:first-child { font-size:15px; color:#526258; margin-bottom:16px; }
+.admin-main h1 { font-size:clamp(1.65rem,3vw,2.15rem); line-height:1.2; font-weight:800; color:#174b32; margin-bottom:16px; }
+.admin-main .bg-white.rounded-xl.shadow, .admin-main .bg-white.rounded-xl { border:1px solid #dce8dc; border-radius:16px; box-shadow:0 4px 14px rgba(24,49,32,.07); }
+.admin-main .inp { min-height:48px; }
+.admin-main aside button, .admin-main button { min-height:44px; }
+@media(max-width:767px){
+ .admin-main { padding:14px; }
+ .admin-main table { min-width:620px; }
+}
