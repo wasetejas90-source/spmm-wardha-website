@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom';
 import {sb,useApp,pub} from './lib';
 
 const defaults:any={
- org_name:'Savitribai Phule Mahila Mandal, Wardha', tagline:'महिला शिक्षित झाली तर समाज प्रगत होईल',
+ org_name:'Savitribai Phule Mahila Mandal, Wardha', tagline:'',
  top_location:'Wardha, Maharashtra',top_email:'',top_phone:'',
  hero_title:'Empowering Women, Building a Better Society',
  hero_subtitle:'Together for Education, Health and Equality',
@@ -42,7 +42,7 @@ export default function Home(){
  return <div className="spmm-home">
   <div className="spmm-top"><span>⌖ {val('top_location')}</span><span>✉ {val('top_email')}</span><span>☎ {val('top_phone')}</span><div className="ml-auto flex gap-4"><Link to={goAuth('login')}>♙ Login</Link><Link to={goAuth('register')}>✎ Register</Link></div></div>
   <header className="spmm-header">
-   <Link to="/" className="spmm-brand">{val('logo_path')?<img src={pub(val('logo_path'))}/>:<div className="spmm-logo-placeholder">SPMM</div>}<div><strong>{val('org_name')}</strong><small>{val('tagline')}</small></div></Link>
+   <Link to="/" className="spmm-brand">{val('logo_path')?<img src={pub(val('logo_path'))}/>:<div className="spmm-logo-placeholder">SPMM</div>}<div><strong>{val('org_name')}</strong></div></Link>
    <nav><a href="#home">Home</a><a href="#about">About</a><a href="#leadership">{val('leadership_title')}</a><a href="#activities">Activities</a><a href="#news">News</a><a href="#contact">Contact</a></nav>
    <div className="flex gap-2 text-sm"><button onClick={()=>setL('en')}>EN</button><button onClick={()=>setL('mr')}>मराठी</button></div>
   </header>
