@@ -147,3 +147,9 @@ img { max-width: 100%; }
  .admin-main { padding:14px; }
  .admin-main table { min-width:620px; }
 }
+
+/* Homepage hero: clean full-photo carousel, no default text panel */
+.spmm-hero.spmm-hero-images-only{height:clamp(230px,34vw,430px);background-color:#e9f1e9;background-position:center;background-size:cover;background-repeat:no-repeat;}
+.spmm-hero-caption{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);max-width:min(90%,760px);padding:10px 18px;border-radius:12px;background:rgba(5,65,34,.82);color:#fff;font-size:clamp(16px,2vw,22px);font-weight:700;text-align:center;}
+.spmm-hero-empty{padding:14px 18px;background:rgba(255,255,255,.9);border-radius:10px;color:#174b32;font-weight:600;text-align:center;}
+@media(max-width:640px){.spmm-hero.spmm-hero-images-only{height:230px}.spmm-hero-caption{bottom:24px;padding:8px 12px;font-size:15px}.spmm-slide-arrow{width:34px;height:34px}.spmm-slide-arrow.left{left:9px}.spmm-slide-arrow.right{right:9px}}

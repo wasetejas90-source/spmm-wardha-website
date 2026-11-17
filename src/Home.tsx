@@ -46,11 +46,10 @@ export default function Home(){
    <nav><a href="#home">Home</a><a href="#about">About</a><a href="#leadership">{val('leadership_title')}</a><a href="#activities">Activities</a><a href="#news">News</a><a href="#contact">Contact</a></nav>
    <div className="flex gap-2 text-sm"><button onClick={()=>setL('en')}>EN</button><button onClick={()=>setL('mr')}>मराठी</button></div>
   </header>
-  <section id="home" className="spmm-hero" style={hero?{backgroundImage:`linear-gradient(90deg,rgba(255,255,255,.16),rgba(255,255,255,.25)),url("${hero}")`}:{} }>
-   <button className="spmm-slide-arrow left" onClick={()=>setIdx((idx-1+slides.length)%Math.max(1,slides.length))}>‹</button>
-   <div className="spmm-hero-copy"><h1>{val('hero_quote')}</h1><b>— {val('hero_quote_author')}</b><p>{val('hero_cta')}</p><h2>{val('hero_title')}</h2><span>{val('hero_subtitle')}</span></div>
-   <button className="spmm-slide-arrow right" onClick={()=>setIdx((idx+1)%Math.max(1,slides.length))}>›</button>
-   <div className="spmm-dots">{slides.map((s,i)=><button key={s.id} onClick={()=>setIdx(i)} className={idx===i?'active':''}/>)}</div>
+  <section id="home" className="spmm-hero spmm-hero-images-only" aria-label="Organization photo slideshow" style={hero?{backgroundImage:`url("${hero}")`}:{}}>
+   {slides.length>1&&<><button aria-label="Previous photo" className="spmm-slide-arrow left" onClick={()=>setIdx((idx-1+slides.length)%slides.length)}>‹</button><button aria-label="Next photo" className="spmm-slide-arrow right" onClick={()=>setIdx((idx+1)%slides.length)}>›</button><div className="spmm-dots">{slides.map((s,i)=><button aria-label={`Show photo ${i+1}`} key={s.id} onClick={()=>setIdx(i)} className={idx===i?'active':''}/>)}</div></>}
+   {slides.length===0&&!hero&&<div className="spmm-hero-empty">Add slideshow photos from Admin Dashboard → Homepage Management → Hero Slider</div>}
+   {slides.length>0&&((lang==='mr'?slides[idx]?.caption_mr:slides[idx]?.caption_en)||'').trim()!==''&&<div className="spmm-hero-caption">{lang==='mr'?slides[idx]?.caption_mr:slides[idx]?.caption_en}</div>}
   </section>
   <section className="spmm-access">
    <Link to="/auth?mode=login&access=admin" className="spmm-access-card admin"><span>♙</span><h2>{val('admin_title')}</h2><p>{val('admin_desc')}</p><b>Login Here →</b></Link>
