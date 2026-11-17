@@ -15,8 +15,8 @@ const defaults:any={
  leadership_title:'Our Leadership',about_title:'About Savitribai Phule Mahila Mandal',
  about:'We are committed to the empowerment of women, education, and social development. Our mission is to build a progressive, equal and educated society where every woman can thrive.',
  about_quote:'Together we can create a stronger, more informed and compassionate society.',
- activities_title:'Our Activities',news_title:'Latest News',join_title:'Join Us in Our Mission',
- join_text:'Be a part of our journey towards a more empowered and progressive society.',
+ activities_title:'Our Activities',news_title:'Latest News',join_title:'Join Us',
+ join_text:'',
  footer_text:'© Savitribai Phule Mahila Mandal, Wardha. All Rights Reserved.',
  logo_path:'',hero_image:'',about_image:''
 };
@@ -64,7 +64,7 @@ export default function Home(){
    <section id="about" className="spmm-about"><div className="spmm-about-image">{val('about_image')&&<img src={pub(val('about_image'))}/>}</div><div><h2>❧ {val('about_title')}</h2><p>{val('about')}</p><Link to="/auth?mode=register">Learn More →</Link></div><blockquote>“{val('about_quote')}”</blockquote></section>
    <section id="activities" className="spmm-section"><h2 className="spmm-heading">{val('activities_title')}</h2><div className="spmm-activity-grid">{acts.map(a=><article className="spmm-activity" key={a.id}>{a.image_path&&<img src={pub(a.image_path)}/>}<b>{text(a,'title')}</b><p>{text(a,'description')}</p></article>)}{!acts.length&&<p className="spmm-empty">Activities will appear here.</p>}</div></section>
    <section id="news" className="spmm-section"><h2 className="spmm-heading">{val('news_title')}</h2><div className="spmm-news-grid">{news.map(n=><article className="spmm-news" key={n.id}>{n.image_path&&<img src={pub(n.image_path)}/>}<div><h3>{text(n,'title')}</h3><small>{n.published_on}</small><p>{text(n,'body')}</p></div></article>)}{!news.length&&<p className="spmm-empty">Latest news will appear here.</p>}</div></section>
-   <section className="spmm-join"><div>🤝 <div><h2>{val('join_title')}</h2><p>{val('join_text')}</p></div></div><Link to={goAuth('register')}>Register Now →</Link></section>
+   <section className="spmm-join"><div>🤝 <div><h2>Join Us</h2></div></div><Link to={goAuth('register')}>Register Now →</Link></section>
   </main>
   <footer id="contact" className="spmm-footer"><div><strong>{val('org_name')}</strong><p>{val('top_location')}</p></div><div>✉ {val('top_email')}<p>☎ {val('top_phone')}</p></div><div>Follow Us: {val('footer_text')}</div></footer>
  </div>
