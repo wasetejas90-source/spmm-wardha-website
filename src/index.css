@@ -20,3 +20,91 @@ body{@apply bg-ivory text-gray-800}
 .spmm-footer{background:#064b25;color:#fff;border-top:5px solid #d4b340;padding:28px 5%;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;font-size:13px}.spmm-footer strong{font: bold 19px Georgia,serif}
 @media(max-width:800px){.spmm-top{gap:9px;font-size:10px}.spmm-header{flex-wrap:wrap}.spmm-brand{max-width:100%}.spmm-header nav{order:3;width:100%;gap:12px}.spmm-header nav a{font-size:12px}.spmm-hero{height:240px}.spmm-hero-copy h1{font-size:23px}.spmm-access{grid-template-columns:1fr;max-width:520px}.spmm-access-card{min-height:125px}.spmm-leaders{grid-template-columns:repeat(2,1fr)}.spmm-about{grid-template-columns:1fr 1fr}.spmm-about blockquote{grid-column:1/-1}.spmm-activity-grid{grid-template-columns:repeat(2,1fr)}.spmm-news-grid{grid-template-columns:1fr}.spmm-footer{grid-template-columns:1fr}}
 @media(max-width:460px){.spmm-brand strong{font-size:16px}.spmm-brand img,.spmm-logo-placeholder{width:55px;height:55px}.spmm-hero{height:230px}.spmm-hero-copy h1{font-size:19px}.spmm-hero-copy h2{font-size:18px}.spmm-leader img,.spmm-no-photo{height:105px}.spmm-about{grid-template-columns:1fr}.spmm-about blockquote{grid-column:auto}.spmm-join{align-items:flex-start;gap:10px;flex-direction:column}}
+
+
+/* SPMM readability and accessibility improvements — preserves existing theme */
+:root {
+  color-scheme: light;
+  font-size: 16px;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+html { scroll-behavior: smooth; }
+body {
+  color: #1f2933;
+  background: #fffdf7;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+#root { min-height: 100vh; }
+p, li, label, input, select, textarea, button { line-height: 1.55; }
+h1, h2, h3, h4 { color: #173d2b; line-height: 1.25; }
+a { text-underline-offset: 3px; }
+button, .btn, .btn2 {
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn {
+  background-color: #145b35;
+  box-shadow: 0 2px 5px rgba(16, 55, 34, .14);
+}
+.btn2 {
+  background-color: #98751a;
+  color: #fff;
+  box-shadow: 0 2px 5px rgba(70, 50, 0, .12);
+}
+.inp {
+  min-height: 46px;
+  border: 1px solid #9aa99d;
+  color: #17251c;
+  font-size: 16px;
+}
+.inp::placeholder { color: #65736a; opacity: 1; }
+input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible {
+  outline: 3px solid #d3a72c;
+  outline-offset: 2px;
+}
+.text-gray-400, .text-gray-500 { color: #59665e !important; }
+.text-gray-600 { color: #46534b !important; }
+.text-xs { font-size: .82rem; line-height: 1.45; }
+.text-sm { font-size: .92rem; line-height: 1.5; }
+.bg-white {
+  border-color: #d8e0d8;
+}
+.rounded-xl.shadow, .rounded-lg.shadow {
+  box-shadow: 0 3px 12px rgba(24, 49, 32, .09);
+}
+table { font-size: .95rem; }
+th { color: #173d2b; font-weight: 800; }
+td, th { padding: .65rem .7rem; }
+img { max-width: 100%; }
+.spmm-home { font-size: 16px; line-height: 1.6; }
+.spmm-top { font-size: 13px; }
+.spmm-header nav a { font-size: 14px; padding: 7px 3px; }
+.spmm-heading { font-size: clamp(22px, 3vw, 29px); }
+.spmm-leader p, .spmm-activity p, .spmm-news p,
+.spmm-news small, .spmm-empty { font-size: 14px; line-height: 1.55; }
+.spmm-leader h3, .spmm-news h3 { font-size: 16px; }
+.spmm-access-card p { font-size: 14px; }
+.spmm-access-card b { font-size: 14px; padding: 9px 22px; }
+.spmm-section { scroll-margin-top: 16px; }
+
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .spmm-main { padding-left: 14px; padding-right: 14px; }
+  .spmm-header { padding: 12px 14px; }
+  .spmm-header nav { gap: 8px 12px; }
+  .spmm-header nav a { font-size: 14px; }
+  .spmm-hero-copy { margin: 0 12px; padding: 18px 14px; }
+  .spmm-access { padding-left: 14px; padding-right: 14px; }
+  .spmm-access-card { min-height: 132px; }
+  .spmm-leaders { gap: 10px; }
+  .spmm-leader { padding: 9px; }
+  .spmm-about p, .spmm-activity p, .spmm-news p { font-size: 14px; }
+  .spmm-footer { padding: 24px 18px; }
+  .btn, .btn2 { padding: 11px 16px; }
+}
