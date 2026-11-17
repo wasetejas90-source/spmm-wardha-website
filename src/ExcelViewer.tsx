@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';import * as XLSX from 'xlsx';import {sb} from './lib';
 const col=(n:number)=>{let s='';n++;while(n>0){s=String.fromCharCode(65+(n-1)%26)+s;n=Math.floor((n-1)/26)}return s};
-export default function ExcelViewer({bucket,path,name,onClose}:any){
+export default function ExcelViewer({bucket,path,name,onClose,allowDownload=true}:any){
  const ref=useRef<HTMLDivElement>(null);const [wb,setWb]=useState<any>(null),[sheet,setSheet]=useState(''),[q,setQ]=useState(''),[z,setZ]=useState(100),[err,setErr]=useState(''),[blob,setBlob]=useState<Blob|null>(null),[sort,setSort]=useState<any>(null);
  useEffect(()=>{(async()=>{const {data,error}=await sb.storage.from(bucket).download(path);if(error)return setErr(error.message);setBlob(data);
   const w=XLSX.read(await data.arrayBuffer(),{type:'array',cellDates:true});setWb(w);setSheet(w.SheetNames[0])})();
@@ -17,7 +17,7 @@ export default function ExcelViewer({bucket,path,name,onClose}:any){
    <input className="text-black rounded px-2 py-1 flex-1 min-w-[100px]" placeholder="Search…" value={q} onChange={e=>setQ(e.target.value)}/>
    <button onClick={()=>setZ(Math.max(50,z-10))}>−</button><span>{z}%</span><button onClick={()=>setZ(Math.min(200,z+10))}>+</button>
    <button onClick={()=>document.fullscreenElement?document.exitFullscreen():ref.current?.requestFullscreen()}>⛶ Full Screen</button>
-   <button onClick={dl}>⬇ Download</button><button onClick={onClose}>✕</button></div>
+   {allowDownload&&<button onClick={dl}>⬇ Download</button>}<button onClick={onClose}>✕</button></div>
   {err&&<p className="p-4 text-red-600">{err}</p>}{!wb&&!err&&<p className="p-4">Loading…</p>}
   <div className="flex-1 overflow-auto" style={{fontSize:`${z}%`}}><table className="border-collapse text-[0.85em]"><thead className="sticky top-0 z-10"><tr><th className="bg-gray-200 border px-2 sticky left-0"></th>
    {Array.from({length:nc}).map((_,i)=><th key={i} onClick={()=>setSort({i,d:sort?.i===i?-sort.d:1})} className="bg-forest text-white border px-3 py-1 cursor-pointer whitespace-nowrap">{String(head[i]||col(i))}{sort?.i===i?(sort.d>0?' ▲':' ▼'):''}</th>)}</tr></thead>
