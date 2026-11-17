@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react';import {useNavigate,useLocation,Link} from 'react-router-dom';import {sb,useApp} from './lib';
 export default function Auth(){
  const {profile,t}=useApp(),nav=useNavigate(),loc=useLocation();const access=new URLSearchParams(loc.search).get('access');
+ useEffect(()=>{const handleBack=()=>{nav('/',{replace:true})};window.addEventListener('popstate',handleBack);return()=>window.removeEventListener('popstate',handleBack)},[nav]);
  useEffect(()=>{if(!profile||profile.status!=='approved')return;const isAdmin=['admin','super_admin'].includes(profile.role);if(access==='admin'&&!isAdmin)return;if(access==='member'&&profile.role!=='member')return;nav(isAdmin?'/admin':'/member',{replace:true})},[profile?.id,profile?.role,profile?.status,access,nav]);const [mode,setMode]=useState(new URLSearchParams(loc.search).get('mode')==='register'?'register':'login'),[f,setF]=useState<any>({}),[msg,setMsg]=useState('');
  const s=(k:string)=>(e:any)=>setF({...f,[k]:e.target.value});
  const go=async(e:any)=>{e.preventDefault();setMsg('');
@@ -10,7 +11,7 @@ export default function Auth(){
  if(profile){const ok=profile.status==='approved';return <div className="max-w-md mx-auto p-6 space-y-3"><h2 className="text-xl font-bold">{profile.full_name}</h2>
   {ok?<><Link className="btn block text-center" to="/member">Member Dashboard</Link>{['admin','super_admin'].includes(profile.role)&&<Link className="btn2 block text-center" to="/admin">Admin Dashboard</Link>}</>:<p className="bg-yellow-100 p-3 rounded">Status: <b>{profile.status}</b>. Access is available after admin approval.</p>}
   <button className="btn" onClick={()=>sb.auth.signOut()}>{t('logout')}</button></div>}
- return <form onSubmit={go} className="max-w-md mx-auto p-6 space-y-3"><h2 className="text-2xl font-bold text-forest">{t(mode==='register'?'register':'login')}</h2>
+ return <form onSubmit={go} className="max-w-md mx-auto p-6 space-y-3"><Link to="/" className="inline-flex items-center gap-2 text-forest font-semibold mb-2">← Back to Home</Link><h2 className="text-2xl font-bold text-forest">{t(mode==='register'?'register':'login')}</h2>
   {mode==='register'&&<><input className="inp" placeholder="Full name" required onChange={s('full_name')}/><input className="inp" placeholder="Mobile" onChange={s('mobile')}/><input className="inp" placeholder="Organization / designation" onChange={s('designation')}/></>}
   <input className="inp" type="email" placeholder="Email" required onChange={s('email')}/>
   {mode!=='reset'&&<input className="inp" type="password" minLength={8} placeholder="Password (min 8)" required onChange={s('password')}/>}

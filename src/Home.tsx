@@ -15,14 +15,14 @@ const defaults:any={
  leadership_title:'Our Leadership',about_title:'About Savitribai Phule Mahila Mandal',
  about:'We are committed to the empowerment of women, education, and social development. Our mission is to build a progressive, equal and educated society where every woman can thrive.',
  about_quote:'Together we can create a stronger, more informed and compassionate society.',
- activities_title:'Our Activities',news_title:'Latest News',join_title:'Join Us',
- join_text:'',
+ activities_title:'Our Activities',news_title:'Latest News',join_title:'Join Us in Our Mission',
+ join_text:'Be a part of our journey towards a more empowered and progressive society.',
  footer_text:'© Savitribai Phule Mahila Mandal, Wardha. All Rights Reserved.',
  logo_path:'',hero_image:'',about_image:''
 };
 export default function Home(){
  const {lang,setL,t,session}=useApp();
- const [c,setC]=useState<any>(defaults),[leaders,setLeaders]=useState<any[]>([]),[news,setNews]=useState<any[]>([]),[acts,setActs]=useState<any[]>([]),[slides,setSlides]=useState<any[]>([]),[idx,setIdx]=useState(0);
+ const [c,setC]=useState<any>(defaults),[leaders,setLeaders]=useState<any[]>([]),[news,setNews]=useState<any[]>([]),[acts,setActs]=useState<any[]>([]),[slides,setSlides]=useState<any[]>([]),[idx,setIdx]=useState(0),[menuOpen,setMenuOpen]=useState(false);
  useEffect(()=>{(async()=>{
   const [h,l,n,a,s]=await Promise.all([
    sb.from('homepage_content').select('*'),
@@ -43,7 +43,7 @@ export default function Home(){
   <div className="spmm-top"><span>⌖ {val('top_location')}</span><span>✉ {val('top_email')}</span><span>☎ {val('top_phone')}</span><div className="ml-auto flex gap-4"><Link to={goAuth('login')}>♙ Login</Link><Link to={goAuth('register')}>✎ Register</Link></div></div>
   <header className="spmm-header">
    <Link to="/" className="spmm-brand">{val('logo_path')?<img src={pub(val('logo_path'))}/>:<div className="spmm-logo-placeholder">SPMM</div>}<div><strong>{val('org_name')}</strong></div></Link>
-   <nav><a href="#home">Home</a><a href="#about">About</a><a href="#leadership">{val('leadership_title')}</a><a href="#activities">Activities</a><a href="#news">News</a><a href="#contact">Contact</a></nav>
+   <button type="button" className="spmm-menu-toggle" aria-label="Open navigation menu" aria-expanded={menuOpen} onClick={()=>setMenuOpen(v=>!v)}>⋮</button><nav className={menuOpen?'is-open':''}><a href="#home" onClick={()=>setMenuOpen(false)}>Home</a><a href="#about" onClick={()=>setMenuOpen(false)}>About</a><a href="#leadership" onClick={()=>setMenuOpen(false)}>{val('leadership_title')}</a><a href="#activities" onClick={()=>setMenuOpen(false)}>Activities</a><a href="#news" onClick={()=>setMenuOpen(false)}>News</a><a href="#contact" onClick={()=>setMenuOpen(false)}>Contact</a></nav>
    <div className="flex gap-2 text-sm"><button onClick={()=>setL('en')}>EN</button><button onClick={()=>setL('mr')}>मराठी</button></div>
   </header>
   <section id="home" className="spmm-hero spmm-hero-images-only" aria-label="Organization photo slideshow" style={hero?{backgroundImage:`url("${hero}")`}:{}}>

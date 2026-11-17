@@ -11,6 +11,6 @@ export default function App(){
  const mem=profile&&profile.status==='approved';
  return <Ctx.Provider value={{session,profile,lang,setL,t,reload:()=>load(session)}}><Routes>
   <Route path="/" element={<Home/>}/><Route path="/auth" element={<Auth/>}/>
-  <Route path="/admin" element={adm?<Admin/>:<Navigate to="/auth"/>}/>
-  <Route path="/member" element={mem?<Member/>:<Navigate to="/auth"/>}/>
+  <Route path="/admin" element={adm?<Admin/>:<Navigate to="/auth" replace/>}/>
+  <Route path="/member" element={mem?<Member/>:<Navigate to="/auth" replace/>}/><Route path="*" element={<Navigate to="/" replace/>}/>
  </Routes></Ctx.Provider>}
