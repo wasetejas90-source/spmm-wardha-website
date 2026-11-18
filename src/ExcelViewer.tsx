@@ -1,7 +1,69 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import ExcelJS from 'exceljs';
+import JSZip from 'jszip';
 import type {CSSProperties} from 'react';
 import {sb} from './lib';
+
+
+
+// Extract pictures from the XLSX drawing parts, then remove drawing links only
+// from the in-memory preview copy. ExcelJS 4.4.0 can crash on some valid drawing
+// XML files; the original uploaded Blob is never changed and remains downloadable.
+const xmlElements=(doc:Document,name:string)=>Array.from(doc.getElementsByTagName('*')).filter((el:any)=>el.localName===name) as Element[];
+const relTarget=(base:string,target:string)=>{
+ if(target.startsWith('/'))return target.slice(1);
+ const parts=base.split('/');parts.pop();
+ for(const part of target.split('/')){if(!part||part==='.')continue;if(part==='..')parts.pop();else parts.push(part)}
+ return parts.join('/');
+};
+async function prepareWorkbookPreview(buffer:ArrayBuffer){
+ const zip=await JSZip.loadAsync(buffer);
+ const readXml=async(path:string)=>{const f=zip.file(path);return f?new DOMParser().parseFromString(await f.async('string'),'application/xml'):null};
+ const workbook=await readXml('xl/workbook.xml');
+ const workbookRels=await readXml('xl/_rels/workbook.xml.rels');
+ const relsById=new Map<string,string>();
+ if(workbookRels)for(const rel of xmlElements(workbookRels,'Relationship'))relsById.set(rel.getAttribute('Id')||'',rel.getAttribute('Target')||'');
+ const sheetNames=new Map<string,string>();
+ if(workbook)for(const sh of xmlElements(workbook,'sheet')){const rid=sh.getAttribute('r:id')||sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id')||'';const target=relsById.get(rid);if(target)sheetNames.set(relTarget('xl/workbook.xml',target),sh.getAttribute('name')||'Sheet');}
+ const pictures:Record<string,string>={};
+ const sheetPaths=Object.keys(zip.files).filter(n=>/^xl\/worksheets\/sheet\d+\.xml$/.test(n));
+ for(const sheetPath of sheetPaths){
+  const sheetDoc=await readXml(sheetPath);if(!sheetDoc)continue;
+  const sheetName=sheetNames.get(sheetPath)||sheetPath.split('/').pop()||'Sheet';
+  const relsPath=sheetPath.replace('worksheets/','worksheets/_rels/')+'.rels';
+  const relDoc=await readXml(relsPath);
+  if(!relDoc)continue;
+  const drawingRels=xmlElements(relDoc,'Relationship').filter(r=>(r.getAttribute('Type')||'').endsWith('/drawing'));
+  for(const drawingRel of drawingRels){
+   const drawingPath=relTarget(sheetPath,drawingRel.getAttribute('Target')||'');
+   const drawingDoc=await readXml(drawingPath);if(!drawingDoc)continue;
+   const drawingRelsPath=drawingPath.replace(/([^/]+)$/,'_rels/$1.rels');
+   const drawingRelDoc=await readXml(drawingRelsPath);
+   const imageTargets=new Map<string,string>();
+   if(drawingRelDoc)for(const rel of xmlElements(drawingRelDoc,'Relationship')){const target=rel.getAttribute('Target')||'';if((rel.getAttribute('Type')||'').endsWith('/image'))imageTargets.set(rel.getAttribute('Id')||'',relTarget(drawingPath,target));}
+   for(const anchor of xmlElements(drawingDoc,'oneCellAnchor').concat(xmlElements(drawingDoc,'twoCellAnchor'))){
+    const from=xmlElements(anchor as unknown as Document,'from')[0];if(!from)continue;
+    const col=Number(xmlElements(from as unknown as Document,'col')[0]?.textContent||0)+1;
+    const row=Number(xmlElements(from as unknown as Document,'row')[0]?.textContent||0)+1;
+    const blip=xmlElements(anchor as unknown as Document,'blip')[0];if(!blip)continue;
+    const embed=blip.getAttribute('r:embed')||blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','embed')||'';
+    const imagePath=imageTargets.get(embed);if(!imagePath)continue;
+    const imageFile=zip.file(imagePath);if(!imageFile)continue;
+    const base64=await imageFile.async('base64');const ext=(imagePath.split('.').pop()||'png').toLowerCase();
+    const mime=ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='gif'?'image/gif':ext==='svg'?'image/svg+xml':'image/png';
+    pictures[`${sheetName}!${row}:${col}`]=`data:${mime};base64,${base64}`;
+   }
+  }
+  // Remove only the drawing reference from the preview copy so ExcelJS can
+  // safely parse cells, styles, formulas, merges and dimensions.
+  for(const node of xmlElements(sheetDoc,'drawing'))node.parentNode?.removeChild(node);
+  zip.file(sheetPath,new XMLSerializer().serializeToString(sheetDoc));
+  for(const rel of drawingRels)rel.parentNode?.removeChild(rel);
+  zip.file(relsPath,new XMLSerializer().serializeToString(relDoc));
+  for(const rel of drawingRels){const dp=relTarget(sheetPath,rel.getAttribute('Target')||'');zip.remove(dp);zip.remove(dp.replace(/([^/]+)$/,'_rels/$1.rels'));}
+ }
+ return {buffer:await zip.generateAsync({type:'arraybuffer'}),pictures};
+}
 
 const colName=(n:number)=>{let s='';while(n>0){s=String.fromCharCode(65+(n-1)%26)+s;n=Math.floor((n-1)/26)}return s};
 const color=(c:any)=>{if(!c)return undefined;let v=c.argb||c.rgb;if(!v&&c.theme!==undefined)return undefined;if(!v)return undefined;v=String(v).replace('#','');if(v.length===8)v=v.slice(2);return v.length===6?'#'+v:undefined};
@@ -82,27 +144,10 @@ function calculateWorkbook(wb:ExcelJS.Workbook){
 }
 
 export default function ExcelViewer({bucket,path,name,onClose,allowDownload=true}:any){
- const ref=useRef<HTMLDivElement>(null);const [wb,setWb]=useState<ExcelJS.Workbook|null>(null),[sheet,setSheet]=useState(''),[q,setQ]=useState(''),[z,setZ]=useState(100),[err,setErr]=useState(''),[blob,setBlob]=useState<Blob|null>(null),[busy,setBusy]=useState(true);
- useEffect(()=>{let live=true;(async()=>{try{const {data,error}=await sb.storage.from(bucket).download(path);if(error)throw error;if(!live)return;setBlob(data);const book=new ExcelJS.Workbook();await book.xlsx.load(await data.arrayBuffer());if(!live)return;setWb(book);setSheet(book.worksheets[0]?.name||'')}catch(e:any){if(live)setErr(e?.message||'Unable to open this Excel file.')}finally{if(live)setBusy(false)}})();const k=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!document.fullscreenElement)onClose()};window.addEventListener('keydown',k);return()=>{live=false;window.removeEventListener('keydown',k)}},[bucket,path]);
+ const ref=useRef<HTMLDivElement>(null);const [wb,setWb]=useState<ExcelJS.Workbook|null>(null),[sheet,setSheet]=useState(''),[q,setQ]=useState(''),[z,setZ]=useState(100),[err,setErr]=useState(''),[blob,setBlob]=useState<Blob|null>(null),[pictures,setPictures]=useState<Record<string,string>>({}),[busy,setBusy]=useState(true);
+ useEffect(()=>{let live=true;(async()=>{try{const {data,error}=await sb.storage.from(bucket).download(path);if(error)throw error;if(!live)return;setBlob(data);const prepared=await prepareWorkbookPreview(await data.arrayBuffer());if(!live)return;setPictures(prepared.pictures);const book=new ExcelJS.Workbook();await book.xlsx.load(prepared.buffer);if(!live)return;setWb(book);setSheet(book.worksheets[0]?.name||'')}catch(e:any){if(live)setErr(e?.message||'Unable to open this Excel file.')}finally{if(live)setBusy(false)}})();const k=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!document.fullscreenElement)onClose()};window.addEventListener('keydown',k);return()=>{live=false;window.removeEventListener('keydown',k)}},[bucket,path]);
  const ws=wb?.getWorksheet(sheet);const compute=useMemo(()=>wb?calculateWorkbook(wb):null,[wb]);
- const dimensions=useMemo(()=>{
-  if(!ws)return{maxRow:0,maxCol:0,merges:new Map<string,{rowSpan:number,colSpan:number}>(),covered:new Set<string>()};
-  const maxRow=Math.max(ws.rowCount,ws.actualRowCount),maxCol=Math.max(ws.columnCount,ws.actualColumnCount);
-  const merges=new Map<string,{rowSpan:number,colSpan:number}>(),covered=new Set<string>();
-  // Avoid ws.model here: ExcelJS serializes drawing metadata through that getter,
-  // which can throw "Cannot read properties of undefined (reading 'anchors')"
-  // for otherwise readable workbooks containing one-cell anchored pictures.
-  const mergeMap=(ws as any)._merges||{};
-  for(const merge of Object.values(mergeMap) as any[]){
-   const model=merge?.model;
-   if(!model)continue;
-   const r1=Number(model.top),c1=Number(model.left),r2=Number(model.bottom),c2=Number(model.right);
-   if(!r1||!c1||!r2||!c2)continue;
-   merges.set(`${r1}:${c1}`,{rowSpan:r2-r1+1,colSpan:c2-c1+1});
-   for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)if(r!==r1||c!==c1)covered.add(`${r}:${c}`);
-  }
-  return{maxRow,maxCol,merges,covered};
- },[ws]);
+ const dimensions=useMemo(()=>{if(!ws)return{maxRow:0,maxCol:0,merges:new Map<string,{rowSpan:number,colSpan:number}>(),covered:new Set<string>()};const maxRow=Math.max(ws.rowCount,ws.actualRowCount),maxCol=Math.max(ws.columnCount,ws.actualColumnCount);const merges=new Map<string,{rowSpan:number,colSpan:number}>(),covered=new Set<string>();for(const m of (((ws as any).model?.merges)||[])){const x=m.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);if(!x)continue;const n=(s:string)=>[...s].reduce((a,c)=>a*26+c.charCodeAt(0)-64,0);const c1=n(x[1]),r1=+x[2],c2=n(x[3]),r2=+x[4];merges.set(`${r1}:${c1}`,{rowSpan:r2-r1+1,colSpan:c2-c1+1});for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)if(r!==r1||c!==c1)covered.add(`${r}:${c}`)}return{maxRow,maxCol,merges,covered}},[ws]);
  const matches=useMemo(()=>{const s=new Set<string>();if(ws&&q.trim())ws.eachRow({includeEmpty:true},(row,r)=>{row.eachCell({includeEmpty:true},(cell,c)=>{const v=compute?.(ws,cell);if(String(v??'').toLowerCase().includes(q.toLowerCase()))s.add(`${r}:${c}`)})});return s},[ws,q,compute]);
  const dl=()=>{if(!blob)return;const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)};
  const pxWidth=(n:number)=>Math.max(35,Math.round((n||10)*7+5));
@@ -110,7 +155,7 @@ export default function ExcelViewer({bucket,path,name,onClose,allowDownload=true
  return <div ref={ref} className="fixed inset-0 z-50 bg-white flex flex-col text-gray-800">
   <div className="flex flex-wrap items-center gap-2 p-2 bg-forest text-white text-sm shrink-0"><button className="px-2" onClick={onClose}>← Back</button><b className="truncate max-w-[30vw]">{name}</b><input className="text-black rounded px-2 py-1 flex-1 min-w-[90px]" placeholder="Find in workbook…" value={q} onChange={e=>setQ(e.target.value)}/><button onClick={()=>setZ(Math.max(50,z-10))}>−</button><span>{z}%</span><button onClick={()=>setZ(Math.min(200,z+10))}>+</button><button onClick={()=>document.fullscreenElement?document.exitFullscreen():ref.current?.requestFullscreen()}>⛶ Full Screen</button>{allowDownload&&<button onClick={dl}>⬇ Download</button>}<button onClick={onClose}>✕</button></div>
   {err&&<p className="p-4 text-red-600">{err}</p>}{busy&&<p className="p-4">Loading workbook…</p>}
-  {ws&&<div className="flex-1 overflow-auto" style={{zoom:z/100}}><table className="border-collapse text-[13px]" style={{tableLayout:'fixed',width:'max-content',minWidth:'100%'}}><colgroup><col style={{width:42}}/>{Array.from({length:dimensions.maxCol},(_,i)=><col key={i} style={{width:pxWidth(ws.getColumn(i+1).width||10.5)}}/>)}</colgroup><thead className="sticky top-0 z-20"><tr><th className="bg-gray-200 border border-gray-300 sticky left-0 z-30 w-[42px]"></th>{Array.from({length:dimensions.maxCol},(_,i)=><th key={i} className="bg-forest text-white border border-white/30 px-2 py-1 text-center font-semibold">{colName(i+1)}</th>)}</tr></thead><tbody>{Array.from({length:dimensions.maxRow},(_,ri)=>{const row=ws.getRow(ri+1);return <tr key={ri} style={{height:row.height?`${row.height*4/3}px`:undefined,display:row.hidden?'none':undefined}}><th className="bg-gray-100 border border-gray-300 text-gray-500 sticky left-0 z-10 font-normal px-2 text-right">{ri+1}</th>{Array.from({length:dimensions.maxCol},(_,ci)=>{const cell=row.getCell(ci+1),key=`${ri+1}:${ci+1}`;if(dimensions.covered.has(key))return null;const span=dimensions.merges.get(key);const v=compute?.(ws,cell);const text=fmt(v,cell.numFmt);const matched=matches.has(key);return <td key={ci} rowSpan={span?.rowSpan} colSpan={span?.colSpan} style={{...cellStyle(cell),backgroundColor:matched?'#fff2a8':cellStyle(cell).backgroundColor||'#fff',height:row.height?`${row.height*4/3}px`:undefined}} className="border border-gray-300 align-middle">{text}</td>})}</tr>})}</tbody></table></div>}
+  {ws&&<div className="flex-1 overflow-auto" style={{zoom:z/100}}><table className="border-collapse text-[13px]" style={{tableLayout:'fixed',width:'max-content',minWidth:'100%'}}><colgroup><col style={{width:42}}/>{Array.from({length:dimensions.maxCol},(_,i)=><col key={i} style={{width:pxWidth(ws.getColumn(i+1).width||10.5)}}/>)}</colgroup><thead className="sticky top-0 z-20"><tr><th className="bg-gray-200 border border-gray-300 sticky left-0 z-30 w-[42px]"></th>{Array.from({length:dimensions.maxCol},(_,i)=><th key={i} className="bg-forest text-white border border-white/30 px-2 py-1 text-center font-semibold">{colName(i+1)}</th>)}</tr></thead><tbody>{Array.from({length:dimensions.maxRow},(_,ri)=>{const row=ws.getRow(ri+1);return <tr key={ri} style={{height:row.height?`${row.height*4/3}px`:undefined,display:row.hidden?'none':undefined}}><th className="bg-gray-100 border border-gray-300 text-gray-500 sticky left-0 z-10 font-normal px-2 text-right">{ri+1}</th>{Array.from({length:dimensions.maxCol},(_,ci)=>{const cell=row.getCell(ci+1),key=`${ri+1}:${ci+1}`;if(dimensions.covered.has(key))return null;const span=dimensions.merges.get(key);const v=compute?.(ws,cell);const text=fmt(v,cell.numFmt);const matched=matches.has(key);const picture=pictures[`${ws.name}!${key}`];return <td key={ci} rowSpan={span?.rowSpan} colSpan={span?.colSpan} style={{...cellStyle(cell),backgroundColor:matched?'#fff2a8':cellStyle(cell).backgroundColor||'#fff',height:row.height?`${row.height*4/3}px`:undefined}} className="border border-gray-300 align-middle">{picture&&<img src={picture} alt="Embedded Excel image" loading="lazy" style={{maxWidth:96,maxHeight:58,width:'auto',height:'auto',objectFit:'contain',display:'block',margin:'2px auto'}}/>}{text}</td>})}</tr>})}</tbody></table></div>}
   {!busy&&wb&&!ws&&<p className="p-4">This workbook has no readable sheet.</p>}
   <div className="flex items-center gap-1 p-1 border-t bg-gray-50 overflow-x-auto text-sm shrink-0">{wb?.worksheets.map(s=><button key={s.name} onClick={()=>{setSheet(s.name);setQ('')}} className={'px-3 py-1 rounded whitespace-nowrap '+(s.name===sheet?'bg-white border font-bold text-forest':'')}>{s.name}</button>)}<span className="ml-auto text-xs text-gray-500 whitespace-nowrap">View only · original file is never modified</span></div>
  </div>;
