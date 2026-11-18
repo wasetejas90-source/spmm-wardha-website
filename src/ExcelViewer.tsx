@@ -85,7 +85,24 @@ export default function ExcelViewer({bucket,path,name,onClose,allowDownload=true
  const ref=useRef<HTMLDivElement>(null);const [wb,setWb]=useState<ExcelJS.Workbook|null>(null),[sheet,setSheet]=useState(''),[q,setQ]=useState(''),[z,setZ]=useState(100),[err,setErr]=useState(''),[blob,setBlob]=useState<Blob|null>(null),[busy,setBusy]=useState(true);
  useEffect(()=>{let live=true;(async()=>{try{const {data,error}=await sb.storage.from(bucket).download(path);if(error)throw error;if(!live)return;setBlob(data);const book=new ExcelJS.Workbook();await book.xlsx.load(await data.arrayBuffer());if(!live)return;setWb(book);setSheet(book.worksheets[0]?.name||'')}catch(e:any){if(live)setErr(e?.message||'Unable to open this Excel file.')}finally{if(live)setBusy(false)}})();const k=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!document.fullscreenElement)onClose()};window.addEventListener('keydown',k);return()=>{live=false;window.removeEventListener('keydown',k)}},[bucket,path]);
  const ws=wb?.getWorksheet(sheet);const compute=useMemo(()=>wb?calculateWorkbook(wb):null,[wb]);
- const dimensions=useMemo(()=>{if(!ws)return{maxRow:0,maxCol:0,merges:new Map<string,{rowSpan:number,colSpan:number}>(),covered:new Set<string>()};const maxRow=Math.max(ws.rowCount,ws.actualRowCount),maxCol=Math.max(ws.columnCount,ws.actualColumnCount);const merges=new Map<string,{rowSpan:number,colSpan:number}>(),covered=new Set<string>();for(const m of (((ws as any).model?.merges)||[])){const x=m.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);if(!x)continue;const n=(s:string)=>[...s].reduce((a,c)=>a*26+c.charCodeAt(0)-64,0);const c1=n(x[1]),r1=+x[2],c2=n(x[3]),r2=+x[4];merges.set(`${r1}:${c1}`,{rowSpan:r2-r1+1,colSpan:c2-c1+1});for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)if(r!==r1||c!==c1)covered.add(`${r}:${c}`)}return{maxRow,maxCol,merges,covered}},[ws]);
+ const dimensions=useMemo(()=>{
+  if(!ws)return{maxRow:0,maxCol:0,merges:new Map<string,{rowSpan:number,colSpan:number}>(),covered:new Set<string>()};
+  const maxRow=Math.max(ws.rowCount,ws.actualRowCount),maxCol=Math.max(ws.columnCount,ws.actualColumnCount);
+  const merges=new Map<string,{rowSpan:number,colSpan:number}>(),covered=new Set<string>();
+  // Avoid ws.model here: ExcelJS serializes drawing metadata through that getter,
+  // which can throw "Cannot read properties of undefined (reading 'anchors')"
+  // for otherwise readable workbooks containing one-cell anchored pictures.
+  const mergeMap=(ws as any)._merges||{};
+  for(const merge of Object.values(mergeMap) as any[]){
+   const model=merge?.model;
+   if(!model)continue;
+   const r1=Number(model.top),c1=Number(model.left),r2=Number(model.bottom),c2=Number(model.right);
+   if(!r1||!c1||!r2||!c2)continue;
+   merges.set(`${r1}:${c1}`,{rowSpan:r2-r1+1,colSpan:c2-c1+1});
+   for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)if(r!==r1||c!==c1)covered.add(`${r}:${c}`);
+  }
+  return{maxRow,maxCol,merges,covered};
+ },[ws]);
  const matches=useMemo(()=>{const s=new Set<string>();if(ws&&q.trim())ws.eachRow({includeEmpty:true},(row,r)=>{row.eachCell({includeEmpty:true},(cell,c)=>{const v=compute?.(ws,cell);if(String(v??'').toLowerCase().includes(q.toLowerCase()))s.add(`${r}:${c}`)})});return s},[ws,q,compute]);
  const dl=()=>{if(!blob)return;const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)};
  const pxWidth=(n:number)=>Math.max(35,Math.round((n||10)*7+5));
