@@ -315,3 +315,64 @@ img { max-width: 100%; }
   .spmm-about { grid-template-columns: 1fr; gap: 18px; }
   .spmm-about-image img { max-height: 340px; }
 }
+
+
+/* Full-bleed hero slideshow with a gentle 3D Ken Burns zoom. */
+.spmm-hero.spmm-hero-images-only {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #073d25 !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+.spmm-hero.spmm-hero-images-only::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: inherit;
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transform: scale(1);
+  transform-origin: center;
+  will-change: transform;
+}
+.spmm-hero.spmm-hero-images-only > * {
+  z-index: 1;
+}
+.spmm-hero.spmm-hero-images-only.spmm-hero-effect-zoom-in::before {
+  animation: spmmHeroZoomIn 7s ease-in-out both;
+}
+.spmm-hero.spmm-hero-images-only.spmm-hero-effect-zoom-out::before {
+  animation: spmmHeroZoomOut 7s ease-in-out both;
+}
+.spmm-hero.spmm-hero-images-only.spmm-hero-effect-zoom-in-out::before {
+  animation: spmmHeroZoomInOut 8s ease-in-out infinite alternate;
+}
+.spmm-hero.spmm-hero-images-only.spmm-hero-effect-none::before {
+  animation: none;
+  transform: scale(1);
+}
+@keyframes spmmHeroZoomIn {
+  from { transform: scale(1); }
+  to { transform: scale(1.13); }
+}
+@keyframes spmmHeroZoomOut {
+  from { transform: scale(1.13); }
+  to { transform: scale(1); }
+}
+@keyframes spmmHeroZoomInOut {
+  from { transform: scale(1); }
+  to { transform: scale(1.13); }
+}
+@media (max-width: 640px) {
+  .spmm-hero.spmm-hero-images-only {
+    background-size: cover !important;
+  }
+  .spmm-hero.spmm-hero-images-only::before {
+    background-size: cover;
+  }
+}
