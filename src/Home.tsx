@@ -2,6 +2,13 @@ import {useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {sb,useApp,pub} from './lib';
 
+function activityImages(value:any):string[]{
+ if(!value)return [];
+ if(Array.isArray(value))return value.filter((x:any)=>typeof x==='string'&&x);
+ if(typeof value==='string'){try{const parsed=JSON.parse(value);if(Array.isArray(parsed))return parsed.filter((x:any)=>typeof x==='string'&&x)}catch{}return [value]}
+ return [];
+}
+
 const defaults:any={
  org_name:'Savitribai Phule Mahila Mandal, Wardha', tagline:'',
  top_location:'Wardha, Maharashtra',top_email:'',top_phone:'',
@@ -61,7 +68,7 @@ export default function Home(){
     {!leaders.length&&<p className="spmm-empty">Leadership profiles will appear here.</p>}
    </div></section>
    <section id="about" className="spmm-about"><div className="spmm-about-image">{val('about_image')&&<img src={pub(val('about_image'))}/>}</div><div><h2>❧ {val('about_title')}</h2><p>{val('about')}</p><Link to="/auth?mode=register">Learn More →</Link></div><blockquote>“{val('about_quote')}”</blockquote></section>
-   <section id="activities" className="spmm-section"><h2 className="spmm-heading">{val('activities_title')}</h2><div className="spmm-activity-grid">{acts.map(a=><article className="spmm-activity" key={a.id}>{a.image_path&&<img src={pub(a.image_path)}/>}<b>{text(a,'title')}</b><p>{text(a,'description')}</p></article>)}{!acts.length&&<p className="spmm-empty">Activities will appear here.</p>}</div></section>
+   <section id="activities" className="spmm-section"><h2 className="spmm-heading">{val('activities_title')}</h2><div className="spmm-activity-grid">{acts.map(a=>{const photos=activityImages(a.image_path);return <article className="spmm-activity" key={a.id}>{photos.length>0&&<div className="spmm-activity-gallery">{photos.map((path,i)=><img key={`${a.id}-${i}`} src={pub(path)} alt={`${text(a,'title')} photo ${i+1}`} loading="lazy"/>)}</div>}<div className="spmm-activity-copy"><b>{text(a,'title')}</b><p>{text(a,'description')}</p></div></article>})}{!acts.length&&<p className="spmm-empty">Activities will appear here.</p>}</div></section>
    <section id="news" className="spmm-section"><h2 className="spmm-heading">{val('news_title')}</h2><div className="spmm-news-grid">{news.map(n=><article className="spmm-news" key={n.id}>{n.image_path&&<img src={pub(n.image_path)}/>}<div><h3>{text(n,'title')}</h3><small>{n.published_on}</small><p>{text(n,'body')}</p></div></article>)}{!news.length&&<p className="spmm-empty">Latest news will appear here.</p>}</div></section>
    <section className="spmm-join"><div>🤝 <div><h2>Join Us</h2></div></div><Link to={goAuth('register')}>Register Now →</Link></section>
   </main>
