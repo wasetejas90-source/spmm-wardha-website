@@ -567,3 +567,66 @@ img { max-width: 100%; }
   .spmm-album-header h2 { font-size: 17px; }
   .spmm-activity-cover { height: 230px; }
 }
+
+/* Activity album headings: make titles clearly visible instead of a thin green strip */
+.spmm-activity-copy {
+  display: block;
+  padding: 18px 20px 20px;
+  text-align: left;
+  background: linear-gradient(180deg, #ffffff 0%, #f5fbf2 100%);
+}
+.spmm-activity-copy b {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 10px;
+  padding: 0 0 7px;
+  color: #064b25 !important;
+  background: transparent !important;
+  border-bottom: 4px solid #d4b340;
+  border-radius: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(22px, 2.2vw, 29px) !important;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.spmm-activity-copy p {
+  color: #35483a;
+  font-size: 16px !important;
+  line-height: 1.65;
+  padding: 0;
+}
+.spmm-activity-open {
+  margin-top: 12px;
+  font-size: 15px;
+  font-weight: 800;
+}
+.spmm-album-header {
+  padding: 18px 22px;
+  background: linear-gradient(115deg, #064b25, #0b7138);
+  color: #fff;
+}
+.spmm-album-header h2 {
+  color: #fff !important;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(24px, 3vw, 32px) !important;
+  font-weight: 900;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.spmm-album-header p { color: #e5f5e8; font-size: 14px; }
+.spmm-album-close { color: #064b25; background: #fff; }
+.spmm-heading {
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 900;
+  line-height: 1.25;
+}
+@media (max-width: 600px) {
+  .spmm-activity-copy { padding: 15px 16px 18px; }
+  .spmm-activity-copy b { font-size: 23px !important; }
+  .spmm-activity-copy p { font-size: 15px !important; }
+  .spmm-album-header { padding: 15px 16px; }
+  .spmm-album-header h2 { font-size: 24px !important; }
+}
