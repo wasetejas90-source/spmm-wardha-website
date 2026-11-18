@@ -170,3 +170,148 @@ img { max-width: 100%; }
  .spmm-header{min-height:96px;padding:12px 14px}
  .spmm-header>.flex{display:none}
 }
+
+
+/* Desktop presentation refinement: preserve original uploaded photos and responsive card sizing */
+.spmm-hero.spmm-hero-images-only {
+  height: clamp(360px, 46vw, 620px) !important;
+  min-height: 360px;
+  background-color: #073d25 !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: contain !important;
+  overflow: hidden;
+}
+.spmm-access {
+  width: min(100% - 36px, 1180px);
+  margin: 26px auto 34px;
+  gap: 20px;
+}
+.spmm-access-card {
+  min-height: 190px;
+  padding: 26px 22px;
+  border-radius: 20px;
+  box-shadow: 0 9px 24px rgba(13, 55, 31, .12);
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+.spmm-access-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 32px rgba(13, 55, 31, .18);
+}
+.spmm-access-card > span { font-size: 32px; }
+.spmm-access-card h2 { font-size: clamp(19px, 2vw, 25px); }
+.spmm-access-card p { font-size: 16px; line-height: 1.5; }
+.spmm-access-card b { font-size: 16px; padding: 11px 25px; }
+
+.spmm-leaders {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)) !important;
+  gap: 22px !important;
+  align-items: stretch;
+  justify-items: stretch;
+}
+.spmm-leader {
+  min-width: 0;
+  padding: 20px 18px !important;
+  border-radius: 20px !important;
+  box-shadow: 0 7px 20px rgba(18, 54, 33, .10);
+  transform: perspective(900px) translateZ(0);
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+.spmm-leader:hover {
+  transform: perspective(900px) translateY(-4px) rotateX(1deg);
+  box-shadow: 0 14px 28px rgba(18, 54, 33, .16);
+}
+.spmm-leader img {
+  display: block !important;
+  width: min(100%, 270px) !important;
+  height: 250px !important;
+  max-width: 100%;
+  margin: 0 auto 10px;
+  object-fit: contain !important;
+  object-position: center center !important;
+  aspect-ratio: auto;
+  border-radius: 12px !important;
+  background: #f4f7f1;
+}
+.spmm-leader label {
+  font-size: 14px !important;
+  padding: 6px 22px !important;
+}
+.spmm-leader h3 {
+  font-size: clamp(18px, 1.7vw, 22px) !important;
+  line-height: 1.35;
+  margin: 10px 0 6px !important;
+}
+.spmm-leader p {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+.spmm-about {
+  grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.5fr) minmax(220px, .8fr);
+  gap: 26px;
+  margin: 42px 0;
+}
+.spmm-about-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+.spmm-about-image img {
+  display: block;
+  width: 100%;
+  height: auto !important;
+  max-height: 360px;
+  object-fit: contain !important;
+  object-position: center;
+  border-radius: 18px;
+  background: #f4f7f1;
+}
+.spmm-activity, .spmm-news {
+  border-radius: 18px;
+  box-shadow: 0 7px 20px rgba(18, 54, 33, .09);
+}
+.spmm-activity img, .spmm-news img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.spmm-section { margin-top: 38px; margin-bottom: 38px; }
+
+@media (max-width: 900px) {
+  .spmm-hero.spmm-hero-images-only {
+    height: clamp(300px, 54vw, 440px) !important;
+    min-height: 300px;
+  }
+  .spmm-access { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spmm-about { grid-template-columns: 1fr 1.4fr; }
+  .spmm-about blockquote { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .spmm-hero.spmm-hero-images-only {
+    height: clamp(230px, 68vw, 340px) !important;
+    min-height: 230px;
+    background-size: contain !important;
+  }
+  .spmm-access {
+    width: calc(100% - 28px);
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin: 18px auto 26px;
+  }
+  .spmm-access-card { min-height: 150px; padding: 20px 16px; }
+  .spmm-leaders {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)) !important;
+    gap: 14px !important;
+  }
+  .spmm-leader { padding: 16px 14px !important; }
+  .spmm-leader img {
+    width: min(100%, 230px) !important;
+    height: 220px !important;
+  }
+  .spmm-leader h3 { font-size: 18px !important; }
+  .spmm-leader p { font-size: 14px !important; }
+  .spmm-about { grid-template-columns: 1fr; gap: 18px; }
+  .spmm-about-image img { max-height: 340px; }
+}
